@@ -45,7 +45,7 @@ void print_text_in_table(string text, int characters_quantity, string ending);
 void show_main_menu(vector<Person> friends);
 void show_searching_menu(vector<Person> friends);
 void add_friend(vector<Person> &friends, int &people_in_whole_database, int &max_friend_id);
-void delete_record_with_searching_by_id(vector<Person> &friends, int id, Dimensions setting);
+void delete_record_with_searching_by_id(vector<Person> &friends, int id, int &people_in_whole_database, Dimensions setting);
 string change_name(string name);
 string change_surname(string surname);
 string change_phone_number(string phone_number);
@@ -94,7 +94,7 @@ int main()
             if (user_id != 0)
             {
                 cout << endl << "You're correctly logged in :)" << endl;
-                //cout << "Welcome " << users_vector[] << "." << endl;
+
                 int max_friend_id = 0;
                 int people_in_whole_database = 0;
                 friends_vector.clear();
@@ -162,7 +162,7 @@ int main()
                         cout << "Enter the id here: ";
                         cin >> id;
                         cout << endl << endl;
-                        delete_record_with_searching_by_id(friends_vector, id, setting1);
+                        delete_record_with_searching_by_id(friends_vector, id, people_in_whole_database, setting1);
                         cout << endl;
                         save_friends_to_file(friends_file, friends_vector, user_id, people_in_whole_database);
                         system("pause");
@@ -461,7 +461,7 @@ void add_friend(vector<Person> &friends, int &people_in_whole_database, int &max
 
 //######################################### DELETING PEOPLE #########################################
 
-void delete_record_with_searching_by_id(vector<Person> &friends, int id, Dimensions setting)
+void delete_record_with_searching_by_id(vector<Person> &friends, int id, int &people_in_whole_database, Dimensions setting)
 {
     string answer;
     string deleting_answer = "n";
@@ -488,6 +488,7 @@ void delete_record_with_searching_by_id(vector<Person> &friends, int id, Dimensi
                 if (deleting_answer == "y")
                 {
                     friends.erase(itr);
+                    people_in_whole_database--;
                     cout << "Deleting completed successfully!" << endl;
                 }
             }
@@ -770,58 +771,62 @@ string get_first_word_from_line_splited_by_character(string text_line, char spli
     }
     text_line.erase(0, character_position + 1);
 
-    if(which_word_in_turn_you_want_to_get == 1) return word;
-    else if(1 < which_word_in_turn_you_want_to_get) return get_first_word_from_line_splited_by_character(text_line, splitting_character, which_word_in_turn_you_want_to_get - 1);
+    if(which_word_in_turn_you_want_to_get == 1)
+    {
+        return word;
+    }
+    else if(1 < which_word_in_turn_you_want_to_get)
+    {
+        return get_first_word_from_line_splited_by_character(text_line, splitting_character, which_word_in_turn_you_want_to_get - 1);
+    }
 }
 
 void save_friends_to_file(string file_name, vector<Person> friends, int user_id_from_vector, int people_in_whole_database)
 {
     cout << "Saving data to file..." << endl;
-    int people_in_user_database = friends.size();
+
     char splitting_character = '|';
     string temp_file_name = get_first_word_from_line_splited_by_character(file_name, '.', 1) + "_temporary.txt";
-    bool is_getline_true = true;
     string main_file_line;
     fstream main_file, temp_file;
     main_file.open(file_name, ios::in);
     temp_file.open(temp_file_name, ios::out);
 
-    cout << "people_in_whole_database 1: " << people_in_whole_database << endl;
-
-    int vector_index = 0;
-    for(int i = 0; i < people_in_whole_database; i++)
+    vector<Person>::iterator friends_vector_itr = friends.begin();
+    vector<Person>::iterator friends_vector_end_itr = friends.end();
+    while(getline(main_file, main_file_line))
     {
-        cin.clear();
-        cin.sync();
-        if (getline(main_file, main_file_line))
-        {
-            is_getline_true = true;
-        }
-        else
-        {
-            is_getline_true = false;
-        }
-
+        int friend_id_from_main_file = atoi(get_first_word_from_line_splited_by_character(main_file_line, splitting_character, 1).c_str());
         int user_id_from_main_file = atoi(get_first_word_from_line_splited_by_character(main_file_line, splitting_character, 2).c_str());
-        if (((user_id_from_vector == user_id_from_main_file) || (is_getline_true == false)) && (vector_index < people_in_user_database))
+        if ((user_id_from_vector == user_id_from_main_file) && ((*friends_vector_itr).id == friend_id_from_main_file)
+            && (friends_vector_itr != friends_vector_end_itr))
         {
-            temp_file << friends[vector_index].id << splitting_character;
+            temp_file << (*friends_vector_itr).id << splitting_character;
             temp_file << user_id_from_vector << splitting_character;
-            temp_file << friends[vector_index].name << splitting_character;
-            temp_file << friends[vector_index].surname << splitting_character;
-            temp_file << friends[vector_index].phone_number << splitting_character;
-            temp_file << friends[vector_index].email << splitting_character;
-            temp_file << friends[vector_index].address << splitting_character << endl;
+            temp_file << (*friends_vector_itr).name << splitting_character;
+            temp_file << (*friends_vector_itr).surname << splitting_character;
+            temp_file << (*friends_vector_itr).phone_number << splitting_character;
+            temp_file << (*friends_vector_itr).email << splitting_character;
+            temp_file << (*friends_vector_itr).address << splitting_character << endl;
 
-            vector_index++;
+            ++friends_vector_itr;
         }
-        else
+        else if ((user_id_from_vector != user_id_from_main_file))
         {
             temp_file << main_file_line << endl;
         }
     }
 
-    cout << "people_in_whole_database 2: " << people_in_whole_database << endl;
+    for (friends_vector_itr; friends_vector_itr != friends_vector_end_itr; ++friends_vector_itr)
+    {
+        temp_file << (*friends_vector_itr).id << splitting_character;
+        temp_file << user_id_from_vector << splitting_character;
+        temp_file << (*friends_vector_itr).name << splitting_character;
+        temp_file << (*friends_vector_itr).surname << splitting_character;
+        temp_file << (*friends_vector_itr).phone_number << splitting_character;
+        temp_file << (*friends_vector_itr).email << splitting_character;
+        temp_file << (*friends_vector_itr).address << splitting_character << endl;
+    }
 
     temp_file.close();
     main_file.close();
