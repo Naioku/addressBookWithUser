@@ -95,17 +95,16 @@ int main()
             {
                 cout << endl << "You're correctly logged in :)" << endl;
 
-                int max_friend_id = 0;
-                int people_in_whole_database = 0;
-                friends_vector.clear();
-                friends_vector = load_friends_from_file(friends_file, friends_vector, user_id, people_in_whole_database, max_friend_id);
-                system("pause");
-
                 char choice;
                 int id;
 
                 while (true)
                 {
+                    int max_friend_id = 0;
+                    int people_in_whole_database = 0;
+                    friends_vector.clear();
+                    friends_vector = load_friends_from_file(friends_file, friends_vector, user_id, people_in_whole_database, max_friend_id);
+
                     choice = '0';
                     show_main_menu(friends_vector);
                     choice = load_char();
@@ -794,11 +793,12 @@ void save_friends_to_file(string file_name, vector<Person> friends, int user_id_
 
     vector<Person>::iterator friends_vector_itr = friends.begin();
     vector<Person>::iterator friends_vector_end_itr = friends.end();
+
     while(getline(main_file, main_file_line))
     {
         int friend_id_from_main_file = atoi(get_first_word_from_line_splited_by_character(main_file_line, splitting_character, 1).c_str());
         int user_id_from_main_file = atoi(get_first_word_from_line_splited_by_character(main_file_line, splitting_character, 2).c_str());
-        if ((user_id_from_vector == user_id_from_main_file) && ((*friends_vector_itr).id == friend_id_from_main_file)
+        if (!friends.empty() && (user_id_from_vector == user_id_from_main_file) && ((*friends_vector_itr).id == friend_id_from_main_file)
             && (friends_vector_itr != friends_vector_end_itr))
         {
             temp_file << (*friends_vector_itr).id << splitting_character;
@@ -850,7 +850,6 @@ void save_friends_to_file(string file_name, vector<Person> friends, int user_id_
 
 vector<Person> load_friends_from_file(string file_name, vector<Person> friends, int user_id, int &people_in_whole_database, int &max_friend_id)
 {
-    cout << "Loading data from file..." << endl;
     Person record;
     int user_id_from_file;
     char splitting_character = '|';
@@ -895,9 +894,6 @@ vector<Person> load_friends_from_file(string file_name, vector<Person> friends, 
         }
     }
     file.close();
-
-
-    cout << "...completed." << endl << endl;
 
     return friends;
 }
